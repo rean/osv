@@ -213,6 +213,53 @@ int sigprocmask(int how, const sigset_t* _set, sigset_t* _oldset)
     return 0;
 }
 
+int sigsuspend(const sigset_t *mask)
+{
+   auto new_mask = from_libc(mask)->mask;
+   auto old_mask = thread_signals()->mask;
+   int sig;
+   thread_signals()->mask = new_mask;
+   for (unsigned i = 0; i < nsignals; ++i) {
+      // If a signal is masked/blocked in the old mask and the new mask
+      // we don't have to do anything. We would not have been waiting
+      // on that signal.
+
+      // If however, signal x was not masked before (x would be delivered)
+      // but the new mask blocks it, then we should stop waiting on that
+      // signal.
+      if (new_mask.test(i) and !old_mask.test(i)) {
+         unwait_for_signal(i); // Remove ourselves as a waiter for this signal
+      } else if (old_mask.test(i) and !new_mask.test(i)) {
+         // If there was a signal that was masked/blocked in the old mask
+         // but not in the new_mask, then we want to let it through so add
+         // ourselves as a waiter for that signal
+         wait_for_signal(i);
+      }
+   }// end-for each signal
+
+   // At this point we're on the right waiter lists so see if we get
+   // any signal we care about
+   sched::thread::wait_until([&sig] { return sig = thread_pending_signal; });
+   thread_pending_signal = 0; // reset
+   const auto sa = signal_actions[sig];
+   sa.sa_sigaction(sig, nullptr, nullptr);
+
+   // Restore mask
+   thread_signals()->mask = old_mask;
+   for (unsigned i = 0; i < nsignals; ++i) {
+      // If new mask blocks a signal that old_mask does not then go back to
+      // waiting for this signal
+      if (new_mask.test(i) and !old_mask.test(i)) {
+         wait_for_signal(i);
+      } else if (old_mask.test(i) and !new_mask.test(i)) {
+         // If old mask blocked something that new mask let through then
+         // stop waiting on this signal
+         unwait_for_signal(i);
+      }
+   }
+   return -1;
+}
+
 int sigaction(int signum, const struct sigaction* act, struct sigaction* oldact)
 {
     // FIXME: We do not support any sa_flags besides SA_SIGINFO.
