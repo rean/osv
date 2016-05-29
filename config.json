@@ -8,6 +8,10 @@
             "type": "direct-dir",
             "path": "${OSV_BASE}/mgmt/"
         },
+       "nginx": {
+           "type": "direct-dir",
+           "path": "${OSV_BASE}/modules/nginx/"
+       },
     "repositories": [
         "${OSV_BASE}/apps",
         "${OSV_BASE}/modules"
