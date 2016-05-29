@@ -42,13 +42,26 @@ int af_local::ioctl(u_long cmd, void *data)
     int error = ENOTTY;
     switch (cmd) {
     case FIONBIO:
-        SCOPE_LOCK(f_lock);
-        if (*(int *)data)
-            f_flags |= FNONBLOCK;
-        else
-            f_flags &= ~FNONBLOCK;
-        error = 0;
-        break;
+       {
+          SCOPE_LOCK(f_lock);
+          if (*(int *)data)
+             f_flags |= FNONBLOCK;
+          else
+             f_flags &= ~FNONBLOCK;
+          error = 0;
+       }
+       break;
+    case FIOASYNC:
+       {
+          SCOPE_LOCK(f_lock);
+          if (*(int *)data) {
+             f_flags |= FASYNC;
+          } else {
+             f_flags &= ~FASYNC;
+          }
+          error = 0;
+       }
+       break;
     }
 
     return error;
