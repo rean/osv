@@ -70,6 +70,7 @@ $(TARGET): $(OBJ_FILES) $(STUB_FILES)
 lib$(TARGET).so: $(OBJ_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
 	ldd $@ | grep boost | sed 's/ *[^ ] *\(.*\) => \(.*\) .*/\/\1: \2/' > usr.manifest
+	echo "/libboost_filesystem.so.1.55.0: $(miscbase)/usr/lib64/libboost_filesystem.so.1.55.0" >> usr.manifest
 
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
