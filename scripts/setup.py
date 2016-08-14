@@ -111,7 +111,7 @@ class Ubuntu(object):
     name = 'Ubuntu'
     install = 'apt-get -y install'
     packages = ['build-essential', 'libboost-all-dev', 'genromfs', 'autoconf',
-                'libtool', 'openjdk-7-jdk', 'ant', 'qemu-utils', 'maven',
+                'libtool', 'openjdk-8-jdk', 'ant', 'qemu-utils', 'maven',
                 'libmaven-shade-plugin-java', 'python-dpkt', 'tcpdump', 'gdb', 'qemu-system-x86',
                 'gawk', 'gnutls-bin', 'openssl', 'python-requests', 'p11-kit', 'g++-multilib',
                 'libssl-dev', 'libedit-dev', 'curl', 'libvirt-bin',
