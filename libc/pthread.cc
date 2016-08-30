@@ -41,27 +41,41 @@ namespace pthread_private {
     __thread pthread_t current_pthread;
     __thread int cancel_state = PTHREAD_CANCEL_ENABLE;
 
+    // NOTE: currently, the list of keys and destructor for each is global,
+    // not per shared object or ELF namespace. So if a shared object uses
+    // pthread_key_create() but doesn't call pthread_key_delete() before
+    // exiting, the key will be leaked. This is relatively harmless (beyond
+    // running out of keys) unless the shared object is unloaded before the
+    // thread exits and the destructors are run.
+    // As a *hack* you can call run_tsd_dtors() before unloading the object,
+    // but this will run all dtors, not just those belonging to the unloaded
+    // object, so this is only useful on a thread especially created for
+    // running the object.
     __attribute__ ((init_priority ((int)init_prio::pthread))) mutex tsd_key_mutex;
     __attribute__ ((init_priority ((int)init_prio::pthread))) std::vector<bool>
                                           tsd_used_keys(tsd_nkeys);
     __attribute__ ((init_priority ((int)init_prio::pthread)))
                   std::vector<void (*)(void*)> tsd_dtor(tsd_nkeys);
 
+    void run_tsd_dtors() {
+        bool done = false;
+        for (unsigned iter = 0; !done && iter < PTHREAD_DESTRUCTOR_ITERATIONS; ++iter) {
+            done = true;
+            for (unsigned i = 0; i < tsd_nkeys; ++i) {
+                if (tsd[i] && tsd_dtor[i]) {
+                    void *val = tsd[i];
+                    tsd[i] = nullptr;
+                    tsd_dtor[i](val);
+                    done = false;
+                }
+            }
+        }
+    }
+
     void __attribute__((constructor)) pthread_register_tsd_dtor_notifier()
     {
         sched::thread::register_exit_notifier([] {
-            bool done = false;
-            for (unsigned iter = 0; !done && iter < PTHREAD_DESTRUCTOR_ITERATIONS; ++iter) {
-                done = true;
-                for (unsigned i = 0; i < tsd_nkeys; ++i) {
-                    if (tsd[i] && tsd_dtor[i]) {
-                        void *val = tsd[i];
-                        tsd[i] = nullptr;
-                        tsd_dtor[i](val);
-                        done = false;
-                    }
-                }
-            }
+            run_tsd_dtors();
         });
     }
 
@@ -261,8 +275,19 @@ extern "C" {
 
 int pthread_key_delete(pthread_key_t key)
 {
-    WARN_STUBBED();
-    return EINVAL;
+    std::lock_guard<mutex> guard(tsd_key_mutex);
+    if (key < 0 || key >= tsd_used_keys.size() || !tsd_used_keys[key]) {
+        return EINVAL;
+    }
+    tsd_dtor[key] = nullptr;
+    // TODO: Currently, we keep tsd_used_keys[key] at true so the key will
+    // not be reused. Since pthread_key_delete cannot get rid of existing
+    // data, reusing the key may causes us to later call a new destructor
+    // for old unrelated data. The cost of not reusing keys is that we can
+    // run out of them if many keys are created and deleted (e.g., a shared
+    // object is loaded and unloaded)..
+    //tsd_used_keys[key] = false;
+    return 0;
 }
 
 void* pthread_getspecific(pthread_key_t key)
@@ -943,7 +968,7 @@ int pthread_attr_setaffinity_np(pthread_attr_t *attr, size_t cpusetsize,
 static int setaffinity(sched::thread* t, size_t cpusetsize,
         const cpu_set_t *cpuset)
 {
-    int count = CPU_COUNT(cpuset);
+    int count = CPU_COUNT_S(cpusetsize, cpuset);
     if (count == 0) {
         // Having a cpuset with no CPUs in it is invalid.
         return EINVAL;
