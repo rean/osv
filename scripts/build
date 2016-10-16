@@ -119,7 +119,8 @@ esac
 modules=${vars[modules]-!$image}
 
 # TODO: some modules need these... Would be better if they wouldn't...
-jdkbase=${vars[jdkbase]-`find $SRC/external/$arch/openjdk.bin/usr/lib/jvm -maxdepth 1 -type d -name 'java*'`}
+#jdkbase=${vars[jdkbase]-`find $SRC/external/$arch/openjdk.bin/usr/lib/jvm -maxdepth 1 -type d -name 'java*'`}
+jdkbase=${vars[jdkbase]-`find /usr/lib/jvm -maxdepth 1 -type d -name 'java-8-op*'`}
 gccbase=${vars[gccbase]-$SRC/external/$arch/gcc.bin}
 glibcbase=${vars[glibcbase]-$SRC/external/$arch/glibc.bin}
 miscbase=${vars[miscbase]-$SRC/external/$arch/misc.bin}
