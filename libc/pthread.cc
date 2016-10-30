@@ -33,6 +33,8 @@
 
 #include "pthread.hh"
 
+
+
 namespace pthread_private {
 
     const unsigned tsd_nkeys = PTHREAD_KEYS_MAX;
@@ -1098,3 +1100,34 @@ int pthread_attr_getaffinity_np(const pthread_attr_t *attr, size_t cpusetsize,
 
     return 0;
 }
+
+// Stubs for pthread_barrier* routines
+// Add pthread_barrier* for node 4.6.1 and node 6.9.1
+
+/*
+int pthread_barrier_init(pthread_barrier_t *restrict b,
+                         const pthread_barrierattr_t *restrict a,
+                         unsigned count)
+*/
+int pthread_barrier_init(pthread_barrier_t *__restrict b,
+                         const pthread_barrierattr_t *__restrict a,
+                         unsigned count)
+{
+   WARN_STUBBED();
+   //if (count-1 > INT_MAX-1) return EINVAL;
+   //*b = (pthread_barrier_t){ ._b_limit = count-1 | (a?a->__attr:0) };
+   return 0;
+}
+
+int pthread_barrier_destroy(pthread_barrier_t *)
+{
+   WARN_STUBBED();
+   return 0;
+}
+
+int pthread_barrier_wait(pthread_barrier_t *)
+{
+   WARN_STUBBED();
+   return 0;
+}
+

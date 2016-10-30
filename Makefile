@@ -1651,6 +1651,9 @@ libc += unistd/getpgrp.o
 libc += unistd/getppid.o
 libc += unistd/getsid.o
 libc += unistd/setsid.o
+# Include some functions needed by node 4.6.1 and 6.9.1
+# like ttyname_r. We need pthread_barrier_* (init, wait, destroy)
+musl += unistd/ttyname_r.o
 
 musl += regex/fnmatch.o
 musl += regex/glob.o

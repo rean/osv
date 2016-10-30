@@ -26,4 +26,10 @@ void run_tsd_dtors();
 }
 #endif
 
+int pthread_barrier_init(pthread_barrier_t *__restrict,
+                         const pthread_barrierattr_t *__restrict,
+                         unsigned);
+int pthread_barrier_destroy(pthread_barrier_t *);
+int pthread_barrier_wait(pthread_barrier_t *);
+
 #endif /* PTHREAD_HH_ */
