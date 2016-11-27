@@ -20,6 +20,13 @@ TRACEPOINT(trace_mutex_unlock, "%p", mutex *);
 TRACEPOINT(trace_mutex_send_lock, "%p, wr=%p", mutex *, wait_record *);
 TRACEPOINT(trace_mutex_receive_lock, "%p", mutex *);
 
+// More detailed tracing of lock stealing attempts in lock and try-lock
+TRACEPOINT(trace_mtx_lock_pre_steal, "mtx: %p, prev-owner: %s (thread: %p), curr-name: %s (thread: %p)", mutex *, const char *, sched::thread *, const char *, sched::thread *);
+TRACEPOINT(trace_mtx_lock_post_steal, "mtx: %p, prev-owner: %s (thread: %p), curr-name: %s (thread: %p)", mutex *, const char *, sched::thread *, const char *, sched::thread *);
+TRACEPOINT(trace_mtx_trylock_pre_steal, "mtx: %p, prev-owner: %s (thread: %p), curr-name: %s (thread: %p)", mutex *, const char *, sched::thread *, const char *, sched::thread *);
+TRACEPOINT(trace_mtx_trylock_post_steal, "mtx: %p, prev-owner: %s (thread: %p), curr-name: %s (thread: %p)", mutex *, const char *, sched::thread *, const char *, sched::thread *);
+TRACEPOINT(trace_mtx_unlock_owner_names, "mtx: %p, prev-owner: %s (thread: %p), curr-name: %s (thread: %p)", mutex *, const char *, sched::thread *, const char *, sched::thread *);
+
 void mutex::lock()
 {
     trace_mutex_lock(this);
