@@ -24,11 +24,12 @@ protected:
     unsigned _val;
     mutex _mtx;
     void post_unlocked(unsigned units = 1);
-
+public: // [RG] Expose so we can trace it
     struct wait_record : boost::intrusive::list_base_hook<> {
         sched::thread* owner;
         unsigned units;
     };
+protected:
     boost::intrusive::list<wait_record,
                           boost::intrusive::base_hook<wait_record>,
                           boost::intrusive::constant_time_size<false>> _waiters;
