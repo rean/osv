@@ -60,43 +60,15 @@ bool semaphore::wait(unsigned units, sched::timer* tmr)
     sched::thread::wait_until(_mtx,
             [&] { return (tmr && tmr->expired()) || !wr.owner; });
 
-    // If wr.owner is not nullptr then there was a timeout (post() did not
-    // wake us). In that case, just remove the wait_record (local variable)
-    // that we just pushed onto _waiters (via push_back)
-    if (wr.owner) {
-       auto i = _waiters.begin();
-       // _val can be 0 right now, so we can't use the same condition that
-       // post_unlocked uses "_val > 0 && i != _waiters.end()"
-       while (i != _waiters.end()) {
-          trace_sem_waiter_scan(this, current_name.c_str(),
-                                sched::thread::current(), &wr,
-                                (int) _waiters.size(), _val);
-
-          auto wait_rec = i++;
-          if (wait_rec->owner == sched::thread::current()) {
-             trace_sem_waiter_cleanup(this, current_name.c_str(),
-                                      sched::thread::current(), &wr,
-                                      (int) _waiters.size(), _val);
-             // We found our wait record so remove it from the list.
-             // There is no need to wake ourselves or set wr.owner = nullptr
-             // we want to remember that we timed out (if post happened then
-             // wr.owner would have been set to nullptr)
-             if (wait_rec->units <= _val) {
-                _val -= wait_rec->units;
-             }
-             // Remove our wait_record
-             _waiters.erase(wait_rec);
-          }
-       }
-    }
-    // Check whether the _waiters list is empty
-    trace_sem_waiter_leave(this, current_name.c_str(),
-                           sched::thread::current(), &wr,
-                           (int) _waiters.size(), _val);
-
     // if wr.owner, it's a timeout - post() didn't wake us and didn't decrease
     // the semaphore's value for us. Note we are holding the mutex, so there
-    // can be no race with post().
+    // can be no race with post(). To clean up we should remove the
+    // wait record (local variable) that we just pushed onto _waiters
+    // (via push_back)
+    if (wr.owner) {
+       _waiters.erase(_waiters.iterator_to(wr));
+    }
+
     return !wr.owner;
  }
 
