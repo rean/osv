@@ -1490,7 +1490,7 @@ musl += stdio/ungetc.o
 musl += stdio/ungetwc.o
 musl += stdio/vasprintf.o
 libc += stdio/vdprintf.o
-musl += stdio/vfprintf.o
+libc += stdio/vfprintf.o
 libc += stdio/vfscanf.o
 musl += stdio/vfwprintf.o
 libc += stdio/vfwscanf.o
@@ -1652,9 +1652,8 @@ libc += unistd/getpgrp.o
 libc += unistd/getppid.o
 libc += unistd/getsid.o
 libc += unistd/setsid.o
-# Include some functions needed by node 4.6.1 and 6.9.1
-# like ttyname_r. We need pthread_barrier_* (init, wait, destroy)
-musl += unistd/ttyname_r.o
+libc += unistd/ttyname_r.o
+libc += unistd/ttyname.o
 
 musl += regex/fnmatch.o
 musl += regex/glob.o
