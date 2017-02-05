@@ -338,7 +338,7 @@ CFLAGS = -std=gnu99 $(COMMON)
 CFLAGS += -I libc/stdio -I libc/internal -I libc/arch/$(arch) \
 	-Wno-missing-braces -Wno-parentheses -Wno-unused-but-set-variable
 
-ASFLAGS = -g $(autodepend) -DASSEMBLY
+ASFLAGS = -g $(autodepend) -D__ASSEMBLY__
 
 $(out)/fs/vfs/main.o: CXXFLAGS += -Wno-sign-compare -Wno-write-strings
 
@@ -822,6 +822,7 @@ endif # x64
 
 ifeq ($(arch),aarch64)
 drivers += drivers/pl011.o
+drivers += drivers/xenconsole.o
 drivers += drivers/virtio.o
 drivers += drivers/virtio-vring.o
 drivers += drivers/virtio-rng.o
@@ -849,6 +850,8 @@ objects += arch/$(arch)/interrupt.o
 objects += arch/$(arch)/pci.o
 objects += arch/$(arch)/msi.o
 objects += arch/$(arch)/power.o
+objects += arch/$(arch)/feexcept.o
+objects += arch/$(arch)/xen.o
 
 $(out)/arch/x64/string-ssse3.o: CXXFLAGS += -mssse3
 
@@ -857,6 +860,7 @@ objects += arch/$(arch)/psci.o
 objects += arch/$(arch)/arm-clock.o
 objects += arch/$(arch)/gic.o
 objects += arch/$(arch)/arch-dtb.o
+objects += arch/$(arch)/hypercall.o
 objects += $(libfdt)
 endif
 
@@ -868,7 +872,6 @@ objects += arch/x64/ioapic.o
 objects += arch/x64/apic.o
 objects += arch/x64/apic-clock.o
 objects += arch/x64/entry-xen.o
-objects += arch/x64/xen.o
 objects += arch/x64/xen_intr.o
 objects += core/sampler.o
 objects += $(acpi)
@@ -1282,7 +1285,7 @@ libc += misc/basename.o
 musl += misc/dirname.o
 libc += misc/ffs.o
 musl += misc/get_current_dir_name.o
-musl += misc/gethostid.o
+libc += misc/gethostid.o
 musl += misc/getopt.o
 musl += misc/getopt_long.o
 musl += misc/getsubopt.o
@@ -1652,6 +1655,7 @@ musl += regex/tre-mem.o
 $(out)/musl/src/regex/tre-mem.o: CFLAGS += -UNDEBUG
 
 libc += pthread.o
+libc += pthread_barrier.o
 libc += libc.o
 libc += dlfcn.o
 libc += time.o

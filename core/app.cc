@@ -133,7 +133,7 @@ shared_app_t application::run(const std::string& command,
     return app;
 }
 
-void run(const std::vector<std::string>& args) {
+void run_background(const std::vector<std::string>& args) {
     application::run(args);
 }
 
@@ -417,6 +417,10 @@ int application::get_return_code()
 std::string application::get_command()
 {
     return _command;
+}
+
+pid_t application::get_main_thread_id() {
+    return pthread_gettid_np(_thread);
 }
 
 // For simplicity, we will not reuse bits in the bitmap, since no destructor is

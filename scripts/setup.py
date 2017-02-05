@@ -129,28 +129,28 @@ class Ubuntu(object):
     ec2_post_install = None
 
     class Ubuntu_16_04(object):
-        packages = []
+        packages = ['openjdk-8-jdk']
         ec2_packages = ['ec2-api-tools', 'awscli']
         test_packages = []
         ec2_post_install = None
         version = '16.04'
 
     class Ubuntu_15_04(object):
-        packages = []
+        packages = ['openjdk-7-jdk']
         ec2_packages = ['ec2-api-tools', 'awscli']
         test_packages = []
         ec2_post_install = None
         version = '15.04'
 
     class Ubuntu_14_04(object):
-        packages = []
+        packages = ['openjdk-7-jdk']
         ec2_packages = ['ec2-api-tools', 'awscli']
         test_packages = []
         ec2_post_install = None
         version = '14.04'
 
     class Ubuntu_13_10(object):
-        packages = []
+        packages = ['openjdk-7-jdk']
         ec2_packages = []
         test_packages = []
         ec2_post_install = standard_ec2_post_install
