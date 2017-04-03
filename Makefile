@@ -487,7 +487,7 @@ $(out)/preboot.bin: $(out)/preboot.elf
 $(out)/loader.img: $(out)/preboot.bin $(out)/loader-stripped.elf
 	$(call quiet, dd if=$(out)/preboot.bin of=$@ > /dev/null 2>&1, DD $@ preboot.bin)
 	$(call quiet, dd if=$(out)/loader-stripped.elf of=$@ conv=notrunc obs=4096 seek=16 > /dev/null 2>&1, DD $@ loader-stripped.elf)
-	$(call quiet, scripts/imgedit.py setargs $@ $(cmdline), IMGEDIT $@)
+	$(call quiet, scripts/imgedit.py setargs "-f raw $@" $(cmdline), IMGEDIT $@)
 
 endif # aarch64
 
@@ -818,6 +818,7 @@ drivers += drivers/ahci.o
 drivers += drivers/ide.o
 drivers += drivers/scsi-common.o
 drivers += drivers/vmw-pvscsi.o
+drivers += drivers/xenplatform-pci.o
 endif # x64
 
 ifeq ($(arch),aarch64)
@@ -1282,6 +1283,20 @@ musl += math/tgammal.o
 musl += math/trunc.o
 musl += math/truncf.o
 musl += math/truncl.o
+
+# Issue #867: Gcc 4.8.4 has a bug where it optimizes the trivial round-
+# related functions incorrectly - it appears to convert calls to any
+# function called round() to calls to a function called lround() -
+# and similarly for roundf() and roundl().
+# None of the specific "-fno-*" options disable this buggy optimization,
+# unfortunately. The simplest workaround is to just disable optimization
+# for the affected files.
+$(out)/musl/src/math/lround.o: conf-opt := $(conf-opt) -O0
+$(out)/musl/src/math/lroundf.o: conf-opt := $(conf-opt) -O0
+$(out)/musl/src/math/lroundl.o: conf-opt := $(conf-opt) -O0
+$(out)/musl/src/math/llround.o: conf-opt := $(conf-opt) -O0
+$(out)/musl/src/math/llroundf.o: conf-opt := $(conf-opt) -O0
+$(out)/musl/src/math/llroundl.o: conf-opt := $(conf-opt) -O0
 
 musl += misc/a64l.o
 libc += misc/basename.o
