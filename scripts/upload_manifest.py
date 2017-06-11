@@ -190,6 +190,10 @@ def main():
                         metavar='VAR=DATA',
                         action='callback',
                         callback=add_var),
+            make_option('-x',
+                        dest='emulation',
+                        help='use emulation instead of a hypervisor',
+                        metavar='FILE'),
     ])
 
     (options, args) = opt.parse_args()
@@ -202,7 +206,13 @@ def main():
     depends.write('%s: \\\n' % (options.output,))
 
     image_path = os.path.abspath(options.output)
-    osv = subprocess.Popen('cd ../..; scripts/run.py --vnc none -m 512 -c1 -i %s -u -s -e "--norandom --nomount --noinit /tools/mkfs.so; /tools/cpiod.so --prefix /zfs/zfs/; /zfs.so set compression=off osv" --forward tcp:10000::10000' % image_path, shell=True, stdout=subprocess.PIPE)
+    osv = None
+    if options.emulation == 'y':
+        print("Using emulation (no hypervisor support) for image creation")
+        osv = subprocess.Popen('cd ../..; scripts/run.py --vnc none -m 512 -c1 -i %s -u -s -p none -e "--norandom --nomount --noinit /tools/mkfs.so; /tools/cpiod.so --prefix /zfs/zfs/; /zfs.so set compression=off osv" --forward tcp:10000::10000' % image_path, shell=True, stdout=subprocess.PIPE)
+    else:
+        print("Using hypervisor support for image creation")
+        osv = subprocess.Popen('cd ../..; scripts/run.py --vnc none -m 512 -c1 -i %s -u -s -e "--norandom --nomount --noinit /tools/mkfs.so; /tools/cpiod.so --prefix /zfs/zfs/; /zfs.so set compression=off osv" --forward tcp:10000::10000' % image_path, shell=True, stdout=subprocess.PIPE)
 
     upload(osv, manifest, depends)
 
