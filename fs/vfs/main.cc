@@ -1492,6 +1492,9 @@ int fcntl(int fd, int cmd, int arg)
     case F_SETOWN_EX:
        WARN_ONCE("fcntl(F_SETOWN/F_SETOWN_EX) stubbed\n");
        break;
+    case F_SETLKW:
+        WARN_ONCE("fcntl(F_SETLKW) stubbed\n");
+        break;
     default:
         kprintf("unsupported fcntl cmd 0x%x\n", cmd);
         error = EINVAL;
